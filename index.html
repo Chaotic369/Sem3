@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Semester III Study Planner</title>
+<style>
+  :root{
+    --bg:#EAF0F4; --panel:#FFFFFF; --ink:#14222E; --muted:#5B6B78;
+    --line:#D3DDE4; --accent:#0E6E78; --accent-soft:#D6EEF0; --pin:#C9871B; --done:#8A9BA6;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;line-height:1.45}
+  main{max-width:640px;margin:0 auto;padding:20px 16px 64px}
+  h1{font-size:1.35rem;margin:0 0 4px;font-weight:700}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:.95rem}
+  .overall{background:var(--ink);color:#fff;border-radius:14px;padding:18px;margin-bottom:16px}
+  .overall .big{font-size:2.4rem;font-weight:700;line-height:1}
+  .overall .small{opacity:.8;font-size:.9rem;margin-top:4px}
+  .bar{height:8px;background:rgba(127,150,165,.28);border-radius:99px;overflow:hidden;margin-top:12px}
+  .bar > i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
+  .overall .bar > i{background:#5FD0D9}
+  section.today{background:var(--panel);border:2px solid var(--pin);border-radius:14px;padding:14px 14px 8px;margin-bottom:16px}
+  section.today h2{font-size:1.05rem;margin:0 0 2px}
+  section.today p.hint{margin:0 0 8px;color:var(--muted);font-size:.9rem}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+  summary{list-style:none;cursor:pointer;padding:14px;display:block}
+  summary::-webkit-details-marker{display:none}
+  .srow{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .sname{font-weight:650}
+  .scount{color:var(--muted);font-size:.9rem;white-space:nowrap}
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-top:6px;color:var(--muted);font-size:.85rem;gap:8px;flex-wrap:wrap}
+  .badge{background:var(--accent-soft);color:#0A4F57;border-radius:99px;padding:2px 10px;font-size:.8rem;font-weight:600}
+  .badge.urgent{background:#FBE3D6;color:#8A3410}
+  .body{padding:2px 14px 14px;border-top:1px solid var(--line)}
+  .datebox{display:flex;align-items:center;gap:8px;margin:12px 0 4px;font-size:.9rem;color:var(--muted)}
+  .datebox input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;color:var(--ink);background:#fff}
+  h3{font-size:.95rem;margin:16px 0 4px;color:var(--accent)}
+  ul{list-style:none;margin:0;padding:0}
+  li{display:flex;align-items:flex-start;gap:6px;border-bottom:1px solid #EDF2F5}
+  li:last-child{border-bottom:0}
+  label{flex:1;display:flex;gap:10px;align-items:flex-start;padding:10px 0;cursor:pointer;min-height:44px}
+  input[type=checkbox]{width:22px;height:22px;margin:1px 0 0;accent-color:var(--accent);flex:none}
+  label.done span.t{text-decoration:line-through;color:var(--done)}
+  .tag{font-size:.75rem;background:#FFF1D6;color:#7A4E05;border-radius:6px;padding:1px 6px;margin-left:6px;font-weight:600;white-space:nowrap}
+  .src{display:block;color:var(--muted);font-size:.8rem}
+  button.pin{flex:none;border:0;background:none;font-size:1.35rem;line-height:1;width:44px;height:44px;cursor:pointer;color:#B6C3CC}
+  button.pin[aria-pressed=true]{color:var(--pin)}
+  button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:20px;color:var(--muted);font-size:.85rem;gap:10px}
+  .reset{font:inherit;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:8px 12px;cursor:pointer;color:var(--ink)}
+  .reset.armed{background:#FBE3D6;border-color:#E3A98B}
+  .empty{color:var(--muted);padding:6px 0 10px;font-size:.92rem}
+  @media (prefers-reduced-motion:reduce){.bar > i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Semester III study planner</h1>
+  <p class="sub">Tick topics as you finish them. Star up to 3 for today.</p>
+  <div id="app"></div>
+</main>
+
+<script>
+const DATA = [
+ {id:"os", name:"Operating System", units:[
+  {n:"Unit 1: Introduction", t:[
+   "OS goals and functions, system components",
+   "Types of OS: batch, multiprogramming, multitasking, multiprocessor, real-time, network, distributed",
+   "User modes and kernel",
+   "System calls and system programs"]},
+  {n:"Unit 2: Processes, scheduling, deadlock", t:[
+   "Process, PCB, process states, transition diagram",
+   "Schedulers, CPU-bound vs I/O-bound, context switch",
+   "Scheduling criteria",
+   "Scheduling algorithms: FCFS, SJF, SRTF, RR, Priority|numericals",
+   "Deadlock characterization",
+   "Deadlock prevention, avoidance, detection"]},
+  {n:"Unit 3: Memory and disk", t:[
+   "Memory management requirements",
+   "Fixed and variable partitioning",
+   "Allocation: first fit, best fit, worst fit|numericals",
+   "Fragmentation and swapping",
+   "Paging and segmentation",
+   "Demand paging and virtual memory",
+   "Page replacement algorithms|numericals",
+   "Disk basics, disk storage, disk scheduling|numericals",
+   "Total transfer time"]},
+  {n:"Unit 4: File system", t:[
+   "File allocation methods",
+   "Free-space management",
+   "File organization and access mechanisms",
+   "File directories and file sharing",
+   "File system implementation issues",
+   "File system protection and security"]}
+ ]},
+ {id:"dbms", name:"DBMS", units:[
+  {n:"Unit 1: Introduction and ER modelling", t:[
+   "Characteristics of the database approach",
+   "Data models",
+   "Database system architecture and data independence",
+   "Entity types, relationships, constraints"]},
+  {n:"Unit 2: Relational model", t:[
+   "Relational model concepts",
+   "Relational constraints",
+   "Relational algebra",
+   "SQL queries|practice"]},
+  {n:"Unit 3: Database design", t:[
+   "Mapping ER/EER to relational model",
+   "Functional dependencies",
+   "Lossless decomposition",
+   "Normal forms up to BCNF|practice"]},
+  {n:"Unit 4: Transactions and indexing", t:[
+   "ACID properties",
+   "Concurrency control",
+   "File operations, unordered and ordered files, file organizations",
+   "Primary, secondary, clustering indexes",
+   "Multilevel indexing with B and B+ trees"]}
+ ]},
+ {id:"java", name:"Java Programming", units:[
+  {n:"Unit 1: Basics, arrays, strings, I/O", t:[
+   "Java architecture and features, C++ vs Java",
+   "Compile and run, variables, data types, operators",
+   "Decision making and loops, methods",
+   "Arrays: one and multi-dimensional",
+   "Strings: String class, StringBuffer, immutability",
+   "I/O: Scanner, byte and character streams, file I/O"]},
+  {n:"Unit 2: OOP", t:[
+   "OOP principles, classes, access control",
+   "Constructors, overloading, objects as parameters",
+   "final, Object class, garbage collection",
+   "Inheritance, overriding, dynamic method dispatch",
+   "Abstract classes and interfaces",
+   "Packages",
+   "Wrapper classes, autoboxing, enumerations, metadata"]},
+  {n:"Unit 3: Exceptions, threads, networking, JDBC", t:[
+   "Exception types, throw, built-in and custom exceptions",
+   "Multithreading: Thread, Runnable, priority",
+   "Thread synchronization and communication, suspend/resume",
+   "java.net, TCP/IP and datagram programming",
+   "JDBC database connectivity"]},
+  {n:"Unit 4: Applets, events, GUI", t:[
+   "Applets, graphics, images and sounds",
+   "Event handling, listener interfaces, adapter and inner classes",
+   "AWT and Swing: labels, buttons, text fields, layouts, menus",
+   "Drawing shapes and fonts",
+   "Servlets overview"]}
+ ]},
+ {id:"se", name:"Software Engineering", units:[
+  {n:"Unit 1: Introduction and requirements", t:[
+   "Evolving role and characteristics of software",
+   "Layered technology, process framework, umbrella activities",
+   "Process models, CMMI",
+   "Requirement engineering and analysis modelling",
+   "Flow-oriented modelling",
+   "SRS: need, characteristics, components"]},
+  {n:"Unit 2: Project, risk, quality", t:[
+   "Estimation and project scheduling",
+   "Risk identification, projection, refinement",
+   "RMMM plan",
+   "Quality concepts, SQA, software reviews",
+   "Process and project metrics"]},
+  {n:"Unit 3: Design", t:[
+   "Design concepts",
+   "Architectural design elements and software architecture",
+   "Data design (architectural and component level)",
+   "Mapping data flow into architecture",
+   "Component-level design"]},
+  {n:"Unit 4: Testing", t:[
+   "Testing fundamentals and strategic approach",
+   "Test strategies for conventional software",
+   "Validation and system testing",
+   "Black-box testing",
+   "White-box testing",
+   "Basis path testing"]}
+ ]},
+ {id:"daa", name:"Design and Analysis of Algorithms", units:[
+  {n:"Unit 1: Design techniques", t:[
+   "Correctness of algorithms",
+   "Iterative techniques",
+   "Divide and conquer",
+   "Dynamic programming",
+   "Greedy algorithms"]},
+  {n:"Unit 2: Sorting and searching", t:[
+   "Bubble and insertion sort",
+   "Merge sort",
+   "Heap sort and quick sort",
+   "Bucket, radix and counting sort",
+   "Searching techniques",
+   "Medians and order statistics",
+   "Complexity analysis|numericals"]},
+  {n:"Unit 3: Lower bounds and trees", t:[
+   "Decision trees",
+   "Balanced trees",
+   "Red-black trees"]},
+  {n:"Unit 4: Graphs", t:[
+   "Breadth first search",
+   "Depth first search and applications",
+   "Minimum spanning trees"]}
+ ]},
+ {id:"dbl", name:"DBMS Lab (SQL)", units:[
+  {n:"Section I", t:[
+   "Select columns in a chosen order (employee number first)",
+   "DISTINCT jobs",
+   "Concatenate name and job with a comma",
+   "All columns separated by commas as THE_OUTPUT",
+   "Salary greater than 2850",
+   "Name and department for employee 7900",
+   "Salary NOT BETWEEN 1500 and 2850",
+   "Dept 10 and 30, ordered by name",
+   "Hired in 1981",
+   "Employees with no manager (NULL)"]},
+  {n:"Section II", t:[
+   "Employees who earn commission",
+   "Sort by salary and commission descending",
+   "Third letter of name is 'A'",
+   "Two R's or two A's, with dept or manager condition",
+   "Commission greater than salary increased by 5%",
+   "Current date",
+   "Salary review date: first Monday after 6 months",
+   "Months between today and hire date",
+   "Dream Salary column (3 x current salary)",
+   "Names starting J, A, M with initial capital and length"]}
+ ]},
+ {id:"jl", name:"Java Lab", units:[
+  {n:"Set 1", t:[
+   "Sum of integers from command-line arguments",
+   "Factorial",
+   "Single-dimensional array defined dynamically",
+   "Length of a 2D array",
+   "Decimal to binary",
+   "Prime check with keyboard input",
+   "Sum of numbers entered interactively",
+   "String and StringBuffer functions",
+   "Distance class (feet, inches) and this"]},
+  {n:"Set 2", t:[
+   "Distance class with constructors, reference assignment, clone",
+   "Overloading with automatic type conversion",
+   "Public vs private, pass by value vs reference, final",
+   "Static functions and variable-length arguments",
+   "Boxing and unboxing"]},
+  {n:"Set 3", t:[
+   "Multi-file program with Scanner",
+   "Multilevel package",
+   "Reusable Fibonacci class in a package"]},
+  {n:"Set 4", t:[
+   "Protection levels across packages",
+   "Divide by zero with ArithmeticException",
+   "Nested try statements",
+   "Custom exception types"]}
+ ]}
+];
+
+const KEY = "sem3-planner-v1";
+let state = {done:{}, pins:{}, dates:{}};
+let openSet = new Set();
+let resetArmed = false;
+let canStore = !!(window.storage && window.storage.get);
+
+async function load(){
+  if(!canStore) return;
+  try{
+    const r = await window.storage.get(KEY);
+    if(r && r.value){ const s = JSON.parse(r.value); state = Object.assign({done:{},pins:{},dates:{}}, s); }
+  }catch(e){ /* nothing saved yet */ }
+}
+async function save(){
+  if(!canStore) return;
+  try{ await window.storage.set(KEY, JSON.stringify(state)); }catch(e){ console.error("Save failed", e); }
+}
+
+function tid(s,u,t){ return s+"-"+u+"-"+t; }
+function parse(raw){ const [text,tag] = raw.split("|"); return {text, tag}; }
+function esc(x){ return x.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function subjectTotals(s){
+  let total=0, done=0;
+  s.units.forEach((u,ui)=>u.t.forEach((_,ti)=>{ total++; if(state.done[tid(s.id,ui,ti)]) done++; }));
+  return {total, done};
+}
+function daysLeft(d){
+  if(!d) return null;
+  const t = new Date(); t.setHours(0,0,0,0);
+  const e = new Date(d+"T00:00:00");
+  return Math.round((e - t)/86400000);
+}
+function daysBadge(d){
+  const n = daysLeft(d);
+  if(n===null) return "";
+  if(n<0) return '<span class="badge">Exam passed</span>';
+  if(n===0) return '<span class="badge urgent">Exam today</span>';
+  return '<span class="badge '+(n<=3?'urgent':'')+'">'+n+' day'+(n===1?'':'s')+' left</span>';
+}
+
+function item(s,ui,ti,showSubject){
+  const raw = s.units[ui].t[ti];
+  const {text,tag} = parse(raw);
+  const id = tid(s.id,ui,ti);
+  const done = !!state.done[id];
+  const pinned = !!state.pins[id];
+  return '<li><label class="'+(done?'done':'')+'"><input type="checkbox" data-done="'+id+'" '+(done?'checked':'')+'>'
+   +'<span><span class="t">'+esc(text)+'</span>'+(tag?'<span class="tag">'+esc(tag)+'</span>':'')
+   +(showSubject?'<span class="src">'+esc(s.name)+'</span>':'')+'</span></label>'
+   +'<button class="pin" data-pin="'+id+'" aria-pressed="'+pinned+'" aria-label="'+(pinned?'Remove from today':'Add to today')+'">'+(pinned?'★':'☆')+'</button></li>';
+}
+
+function render(){
+  let all=0, allDone=0;
+  DATA.forEach(s=>{ const t=subjectTotals(s); all+=t.total; allDone+=t.done; });
+  const pct = all? Math.round(allDone/all*100):0;
+
+  // today list
+  let todayHtml = "";
+  DATA.forEach(s=>s.units.forEach((u,ui)=>u.t.forEach((_,ti)=>{
+    if(state.pins[tid(s.id,ui,ti)]) todayHtml += item(s,ui,ti,true);
+  })));
+  const pinCount = Object.values(state.pins).filter(Boolean).length;
+
+  let h = '<div class="overall"><div class="big">'+pct+'%</div><div class="small">'+allDone+' of '+all+' topics done</div>'
+    +'<div class="bar"><i style="width:'+pct+'%"></i></div></div>';
+
+  h += '<section class="today"><h2>Today</h2>'
+    + (pinCount? '<p class="hint">'+(pinCount>3?'That is more than 3. Keep the list you can finish.':'Finish these, then stop for the day.')+'</p><ul>'+todayHtml+'</ul>'
+                : '<p class="empty">Nothing starred yet. Open a subject and tap ☆ next to up to 3 topics.</p>')
+    + '</section>';
+
+  DATA.forEach(s=>{
+    const t = subjectTotals(s);
+    const p = t.total? Math.round(t.done/t.total*100):0;
+    h += '<details data-sid="'+s.id+'"'+(openSet.has(s.id)?' open':'')+'><summary>'
+      +'<div class="srow"><span class="sname">'+esc(s.name)+'</span><span class="scount">'+t.done+' / '+t.total+'</span></div>'
+      +'<div class="bar"><i style="width:'+p+'%"></i></div>'
+      +'<div class="meta"><span>'+p+'% done</span>'+daysBadge(state.dates[s.id])+'</div></summary><div class="body">'
+      +'<div class="datebox"><label style="padding:0;min-height:0;cursor:default" for="d-'+s.id+'">Exam date</label>'
+      +'<input type="date" id="d-'+s.id+'" data-date="'+s.id+'" value="'+(state.dates[s.id]||'')+'"></div>';
+    s.units.forEach((u,ui)=>{
+      h += '<h3>'+esc(u.n)+'</h3><ul>';
+      u.t.forEach((_,ti)=>{ h += item(s,ui,ti,false); });
+      h += '</ul>';
+    });
+    h += '</div></details>';
+  });
+
+  h += '<div class="foot"><span>'+(canStore?'Progress saves automatically.':'Progress is not saved if you close this page.')+'</span>'
+    +'<button class="reset'+(resetArmed?' armed':'')+'" data-reset>'+(resetArmed?'Tap again to clear everything':'Reset progress')+'</button></div>';
+
+  document.getElementById("app").innerHTML = h;
+}
+
+const app = document.getElementById("app");
+app.addEventListener("change", e=>{
+  const d = e.target.dataset;
+  if(d.done){ state.done[d.done] = e.target.checked; resetArmed=false; save(); render(); }
+  else if(d.date){ state.dates[d.date] = e.target.value; save(); render(); }
+});
+app.addEventListener("click", e=>{
+  const pin = e.target.closest("[data-pin]");
+  if(pin){ const id = pin.dataset.pin; state.pins[id] = !state.pins[id]; resetArmed=false; save(); render(); return; }
+  if(e.target.closest("[data-reset]")){
+    if(resetArmed){ state = {done:{},pins:{},dates:{}}; resetArmed=false; save(); }
+    else resetArmed = true;
+    render();
+  }
+});
+app.addEventListener("toggle", e=>{
+  const el = e.target;
+  if(el.tagName==="DETAILS" && el.dataset.sid){
+    if(el.open) openSet.add(el.dataset.sid); else openSet.delete(el.dataset.sid);
+  }
+}, true);
+
+load().then(render);
+</script>
+</body>
+</html>
