@@ -54,7 +54,13 @@
   .reset{font:inherit;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:8px 12px;cursor:pointer;color:var(--ink)}
   .reset.armed{background:#FBE3D6;border-color:#E3A98B}
   .empty{color:var(--muted);padding:6px 0 10px;font-size:.92rem}
-  @media (prefers-reduced-motion:reduce){.bar > i{transition:none}}
+    .syncwrap{display:flex;align-items:center;gap:8px}
+    .dot{width:10px;height:10px;border-radius:50%;flex:none;background:#B6C3CC}
+    .dot.ok{background:#2E9E5B}
+    .dot.busy{background:#C9871B;animation:pulse 1s infinite}
+    .dot.err{background:#C8432B}
+    @keyframes pulse{50%{opacity:.35}}
+    @media (prefers-reduced-motion:reduce){.bar > i{transition:none}.dot.busy{animation:none}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -281,10 +287,18 @@ try{
   syncMsg = "Not synced: Firebase failed to load";
 }
 
+function syncClass(msg){
+  if(msg.indexOf("Synced")===0) return "ok";
+  if(/error|offline|not synced/i.test(msg)) return "err";
+  return "busy";
+}
+
 function setSync(msg){
   syncMsg = msg;
   const el = document.getElementById("sync-msg");
   if(el) el.textContent = msg;
+  const dot = document.getElementById("sync-dot");
+  if(dot) dot.className = "dot " + syncClass(msg);
 }
 
 async function load(){
@@ -383,7 +397,7 @@ function render(){
     h += '</div></details>';
   });
 
-  h += '<div class="foot"><span id="sync-msg">'+esc(syncMsg)+'</span>'
+  h += '<div class="foot"><span class="syncwrap"><i id="sync-dot" class="dot '+syncClass(syncMsg)+'"></i><span id="sync-msg">'+esc(syncMsg)+'</span></span>'
     +'<button class="reset'+(resetArmed?' armed':'')+'" data-reset>'+(resetArmed?'Tap again to clear everything':'Reset progress')+'</button></div>';
 
   document.getElementById("app").innerHTML = h;
