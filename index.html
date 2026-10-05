@@ -318,7 +318,7 @@ async function save(){
   if(!canStore) return;
   setSync("Syncing...");
   try{
-    await USER_DOC.set(state);
+    await USER_DOC.set(Object.assign({}, state, {starred: starredList()}));
     setSync("Synced");
   }catch(e){
     console.error("Save failed", e);
@@ -327,6 +327,14 @@ async function save(){
 }
 
 function tid(s,u,t){ return s+"-"+u+"-"+t; }
+function starredList(){
+  const out = [];
+  DATA.forEach(s=>s.units.forEach((u,ui)=>u.t.forEach((raw,ti)=>{
+    const id = tid(s.id,ui,ti);
+    if(state.pins[id]) out.push({subject:s.name, text:parse(raw).text, done:!!state.done[id]});
+  })));
+  return out;
+}
 function parse(raw){ const [text,tag] = raw.split("|"); return {text, tag}; }
 function esc(x){ return x.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
