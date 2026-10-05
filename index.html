@@ -56,6 +56,8 @@
   .empty{color:var(--muted);padding:6px 0 10px;font-size:.92rem}
   @media (prefers-reduced-motion:reduce){.bar > i{transition:none}}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <main>
@@ -254,22 +256,59 @@ const DATA = [
  ]}
 ];
 
-const KEY = "sem3-planner-v1";
+const firebaseConfig = {
+  apiKey: "AIzaSyAHDMiGbQT6mgYON0mMmGTfmeGSkKMgPBM",
+  authDomain: "qnea-aff56.firebaseapp.com",
+  projectId: "qnea-aff56",
+  storageBucket: "qnea-aff56.firebasestorage.app",
+  messagingSenderId: "109083120476",
+  appId: "1:109083120476:web:0a5e5f024df11b53d12799"
+};
+
 let state = {done:{}, pins:{}, dates:{}};
 let openSet = new Set();
 let resetArmed = false;
-let canStore = !!(window.storage && window.storage.get);
+let syncMsg = "Connecting...";
+let USER_DOC = null;
+let canStore = false;
+
+try{
+  firebase.initializeApp(firebaseConfig);
+  USER_DOC = firebase.firestore().collection("syllabus_tracker").doc("sem3_planner");
+  canStore = true;
+}catch(e){
+  console.error("Firebase init failed", e);
+  syncMsg = "Not synced: Firebase failed to load";
+}
+
+function setSync(msg){
+  syncMsg = msg;
+  const el = document.getElementById("sync-msg");
+  if(el) el.textContent = msg;
+}
 
 async function load(){
   if(!canStore) return;
+  setSync("Loading...");
   try{
-    const r = await window.storage.get(KEY);
-    if(r && r.value){ const s = JSON.parse(r.value); state = Object.assign({done:{},pins:{},dates:{}}, s); }
-  }catch(e){ /* nothing saved yet */ }
+    const doc = await USER_DOC.get();
+    if(doc.exists){ state = Object.assign({done:{},pins:{},dates:{}}, doc.data()); }
+    setSync("Synced");
+  }catch(e){
+    console.error("Load failed", e);
+    setSync("Offline: changes are not saved online");
+  }
 }
 async function save(){
   if(!canStore) return;
-  try{ await window.storage.set(KEY, JSON.stringify(state)); }catch(e){ console.error("Save failed", e); }
+  setSync("Syncing...");
+  try{
+    await USER_DOC.set(state);
+    setSync("Synced");
+  }catch(e){
+    console.error("Save failed", e);
+    setSync("Sync error: changes are not saved online");
+  }
 }
 
 function tid(s,u,t){ return s+"-"+u+"-"+t; }
@@ -344,7 +383,7 @@ function render(){
     h += '</div></details>';
   });
 
-  h += '<div class="foot"><span>'+(canStore?'Progress saves automatically.':'Progress is not saved if you close this page.')+'</span>'
+  h += '<div class="foot"><span id="sync-msg">'+esc(syncMsg)+'</span>'
     +'<button class="reset'+(resetArmed?' armed':'')+'" data-reset>'+(resetArmed?'Tap again to clear everything':'Reset progress')+'</button></div>';
 
   document.getElementById("app").innerHTML = h;
